@@ -22,6 +22,7 @@ class BaseModel(models.Model):
 class Image(BaseModel):
 
     alt_text = models.CharField(_('Alternative Text'), max_length=50 , blank=True, null=True)
+    name = models.CharField(_('Name'), max_length=200,blank=True, null=True)
     Image = models.ImageField(_('Image'), upload_to='images/' )
     
     class Meta:

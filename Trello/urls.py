@@ -17,13 +17,15 @@ Including another URLconf
 
 from django.contrib import admin
 from django.urls import path , include
+from django.conf.urls.static import static
 from rest_framework_simplejwt.views import  TokenObtainPairView ,TokenRefreshView
 from drf_spectacular.views import (SpectacularAPIView,SpectacularRedocView,SpectacularSwaggerView)
+from django.conf import settings
+import debug_toolbar
 
 
 
-
-urlpatterns = [
+urlpatterns = ([
     path("admin/", admin.site.urls),
     path("", include('Account.urls')),
     path("", include('Workspace.urls')),
@@ -40,6 +42,9 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name="schema"),
         name="redoc",
     ),
-    path("__debug__/", include("debug_toolbar.urls")),
-]
+    path("__debug__/", include(debug_toolbar.urls)),
+
+] + static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT) +
+        static(settings.STATIC_URL, document_root = settings.STATIC_ROOT))
+
 

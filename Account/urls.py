@@ -1,12 +1,12 @@
 from django.urls import path , include
-from .views import UserView
+from .views import UserView 
 from rest_framework.routers import SimpleRouter
 
 
 
 
 router = SimpleRouter()
-router.register("profile",UserView,basename="profile")
+router.register("account",UserView,basename="profile")
 
 
 

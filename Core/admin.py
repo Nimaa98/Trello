@@ -6,6 +6,6 @@ from .models import Image
 @admin.register(Image)
 class ImageAdmin(admin.ModelAdmin):
 
-    list_display = ('Image' ,'alt_text', 'create_at')
+    list_display = ('name','Image' ,'alt_text', 'create_at')
     list_filter = ('create_at',)
-    search_fields = ('alt_text',)
+    search_fields = ('name',)
