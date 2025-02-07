@@ -29,9 +29,26 @@ DEBUG = True
 
 DEBUG_TOOLBAR_CONFIG = {
     'SHOW_TOOLBAR_CALLBACK': lambda request: True,  
-    'RESULTS_CACHE_SIZE': 100,  
-    'ENABLE_STACKTRACES': True,  
+    'RESULTS_CACHE_SIZE': 100,
+    'INTERCEPT_REDIRECTS': False,  
+    'ENABLE_STACKTRACES': False,
+    'SQL_WARNING_THRESHOLD': 0, 
+    'DISABLE_PANELS': 'debug_toolbar.panels.redirects.RedirectsPanel',
 }
+
+SWAGGER_SETTINGS = {
+    "USE_SESSION_AUTH": False,
+    "SHOW_REQUEST_HEADERS": True,
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+        }
+    },
+    "VALIDATOR_URL": None,
+}
+
 
 ALLOWED_HOSTS = []
 
@@ -69,9 +86,8 @@ INSTALLED_APPS = [
 
 
 
-
-
 MIDDLEWARE = [
+    
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -145,7 +161,8 @@ USE_I18N = True
 USE_TZ = True
 
 INTERNAL_IPS = [
-    "127.0.0.1",    
+    "127.0.0.1",
+    "localhost",    
 ]
 
 # Static files (CSS, JavaScript, Images)
@@ -185,3 +202,19 @@ SPECTACULAR_SETTINGS = {
     "VERSION": "1.0.0",
 }
 
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "debug_toolbar": {
+            "level": "DEBUG",
+            "handlers": ["console"],
+            "propagate": False,
+        },
+    },
+}
