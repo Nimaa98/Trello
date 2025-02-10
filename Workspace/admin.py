@@ -19,7 +19,6 @@ class WorkspaceUserdmin(admin.ModelAdmin):
     search_fields = ('user__username','user__email',)
 
 
-
 @admin.register(Board)
 class BoardAdmin(admin.ModelAdmin):
 

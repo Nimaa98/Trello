@@ -30,8 +30,8 @@ class Workspace(BaseModel):
 
 
 class WorkspaceUser(BaseModel):
-    workspace = models.ForeignKey(Workspace,verbose_name=_('WorkSpace'),on_delete=models.CASCADE,related_name='workspaceuser')
-    user = models.ForeignKey(User,verbose_name=_('User'),on_delete=models.CASCADE,related_name='userworkspace')
+    workspace = models.ForeignKey(Workspace,verbose_name=_('WorkSpace'),on_delete=models.CASCADE,related_name='workspaceusers')
+    user = models.ForeignKey(User,verbose_name=_('User'),on_delete=models.CASCADE,related_name='usersworkspace')
 
 
     def __str__(self):
@@ -72,7 +72,7 @@ class Project(BaseModel):
     deadline = models.DateField(null=True, blank=True)
     image = models.ForeignKey(Image,verbose_name=_('Image'),on_delete=models.SET_NULL,null=True , blank=True)
     board = models.ForeignKey(Board,verbose_name=_('Board'),on_delete=models.CASCADE,related_name='projects')
-    admin = models.ForeignKey(WorkspaceUser,verbose_name=_('Admin'),on_delete=models.CASCADE)
+    admin = models.ForeignKey(WorkspaceUser,verbose_name=_('Admin'),on_delete=models.CASCADE,null=True,blank=True)
 
 
     def __str__(self):
@@ -109,13 +109,13 @@ class Task(BaseModel):
     description = models.TextField(_('Description'),null=True, blank=True)
     start_time = models.DateField(_('Start Time'),null=True, blank=True)
     end_time = models.DateField(_('End Time'),null=True, blank=True)
-    delivery_time = models.DateField(_('Delivery Time'),null=True, blank=True)
+    delivery_time = models.DateField(_('Delivery Time'))
 
     status = models.CharField(_('Status'), max_length=50,choices=[('todo','ToDo'),
     ('doing','Doing'),('suspend','Suspend'),('done','Done')], default='todo')
 
     label = models.CharField(_('Label'), max_length=100,null=True,blank=True)
-    project = models.ForeignKey(Project,verbose_name=_('Project'),on_delete=models.CASCADE,related_name='tasks')
+    project = models.ForeignKey(Project,verbose_name=_('Project'),on_delete=models.CASCADE,related_name='tasks',null=True,blank=True)
     user = models.ForeignKey(Role,verbose_name=_('User') , on_delete=models.SET_NULL,null=True,blank=True,related_name='task')
     file = models.FileField(_('File'),upload_to='files/', null=True, blank=True,default=None)
 
