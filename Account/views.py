@@ -26,8 +26,6 @@ class UserView(viewsets.ModelViewSet):
     
 
     def get_object(self):
-        #if self.action == 'custom-action':
-            #return self.request.user
         return super().get_object()
     
 
