@@ -1,4 +1,4 @@
-from rest_framework import status, generics, viewsets
+from rest_framework import status, generics, viewsets , serializers
 from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.request import Request
@@ -7,111 +7,116 @@ from .models import User
 from .serializers import (WorkspaceSerializer,WorkspaceDetailSerializer,
                         BoardSerializer,BoardDetailSerializer,ProjectSerializer,
                         ProjectDetailSerializer,TaskSerializer,
-                        TaskDetailSerializer,RoleSerializer)
+                        TaskDetailSerializer,RoleSerializer,
+                        WorkspaceUserSerializer)
 
 from rest_framework.permissions import AllowAny
 from django.db import connection
-from .models import Workspace,Board,Project,Task,Role
+from .models import Workspace,Board,Project,Task,Role,WorkspaceUser
+from django.shortcuts import get_object_or_404
+from .permission import WorkspacePermission
+from django.core.exceptions import ValidationError
+
 # Create your views here.
 
 
 
-class CustomView:
+class CustomView(viewsets.GenericViewSet):
+
+    lookup_field = 'id'
 
     def get_object(self):
-        return super().get_object()
+        return  get_object_or_404(self.get_queryset(),id=self.kwargs['id'])
     
 
-    @action(detail=False , methods=['get','put','patch','delete'] , url_path='custom-action')
-    def custom_action(self,request):
-        if request.method == 'GET':
-            serializer = self.get_serializer(request.user)
-            return Response(serializer.data,status=200)
-
-
-        elif request.method in ['PUT','PATCH']:
-            serializer = self.get_serializer(request.user, data = request.data , partial = (request.method == 'PATCH'))
-            serializer.is_valid(raise_exception = True)
-            serializer.save()
-
-            return Response(serializer.data,status=201)
-
-        elif request.method == 'DELETE':
-            request.user.delete()
-            return Response({'message': 'user deleted successfully'} , status=204)
 
 
 
-class WorkspaceView(viewsets.ModelViewSet,CustomView):
+class WorkspaceView(CustomView,viewsets.ModelViewSet):
     
-    lookup_field = 'id'
-    queryset = Workspace.objects.all()
-    #permission_classes = []
+    #lookup_field = 'id'
+    permission_classes = [AllowAny]
 
-    def get_serializer(self,request):
+    def get_queryset(self):
+        return Workspace.objects.filter(owner=self.request.user)
+
+
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
+
+
+    def get_serializer_class(self):
 
         serializer_class = WorkspaceDetailSerializer
-        if request.method == 'LIST':
+        if self.action == 'list':
             serializer_class = WorkspaceSerializer
 
         return serializer_class
+
     
 
+class WorkspaceUserView(CustomView,viewsets.ModelViewSet):
+    
+    #lookup_field = 'id'
+    permission_classes = [AllowAny]
+    serializer_class = WorkspaceUserSerializer
+    queryset = WorkspaceUser.objects.all()
 
 
-class BoardView(viewsets.ModelViewSet,CustomView):
+
+class BoardView(CustomView,viewsets.ModelViewSet):
     
 
-    lookup_field = 'id'
+    #lookup_field = 'id'
     queryset = Board.objects.all()
-    #permission_classes = []
+    permission_classes = [AllowAny]
 
-    def get_serializer(self,request):
+    def get_serializer_class(self):
 
         serializer_class = BoardDetailSerializer
-        if request.method == 'LIST':
+        if self.action == 'list':
             serializer_class = BoardSerializer
 
         return serializer_class
     
-class ProjectView(viewsets.ModelViewSet,CustomView):
+class ProjectView(CustomView,viewsets.ModelViewSet):
     
 
-    lookup_field = 'id'
+    #lookup_field = 'id'
     queryset = Project.objects.all()
-    #permission_classes = []
+    permission_classes = [AllowAny]
 
-    def get_serializer(self,request):
+    def get_serializer_class(self):
 
         serializer_class = ProjectDetailSerializer
-        if request.method == 'LIST':
+        if self.action == 'list':
             serializer_class = ProjectSerializer
 
         return serializer_class
     
 
-class TaskView(viewsets.ModelViewSet,CustomView):
+class TaskView(CustomView,viewsets.ModelViewSet):
     
 
-    lookup_field = 'id'
+    #lookup_field = 'id'
     queryset = Task.objects.all()
-    #permission_classes = []
+    permission_classes = [AllowAny]
 
-    def get_serializer(self,request):
+    def get_serializer_class(self):
 
         serializer_class = TaskDetailSerializer
-        if request.method == 'LIST':
+        if self.action == 'list':
             serializer_class = TaskSerializer
 
         return serializer_class
     
 
-class RoleView(viewsets.ModelViewSet,CustomView):
+class RoleView(CustomView,viewsets.ModelViewSet):
     
 
-    lookup_field = 'id'
+    #lookup_field = 'id'
     queryset = Role.objects.all()
-    #permission_classes = []
+    permission_classes = [AllowAny]
     serializer_class = RoleSerializer
         
 

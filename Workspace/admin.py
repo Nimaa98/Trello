@@ -6,7 +6,7 @@ from .models import Workspace,WorkspaceUser,Board,Project,Task,Role
 @admin.register(Workspace)
 class WorkspaceAdmin(admin.ModelAdmin):
 
-    list_display = ('name' , 'type', 'description', 'create_at')
+    list_display = ('name' , 'type','owner', 'description', 'create_at')
     list_filter = ('type',)
     search_fields = ('name',)
 

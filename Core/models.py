@@ -30,3 +30,6 @@ class Image(BaseModel):
         verbose_name = _('Image')
         verbose_name_plural = _('Images')
 
+    def __str__(self):
+        return self.name
+
