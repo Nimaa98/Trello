@@ -4,7 +4,7 @@ from Core.models import BaseModel
 from django.utils.translation import gettext_lazy as _
 from Account.models import User
 from Core.models import Image
-
+from datetime import date
 
 # Create your models here.
 
@@ -75,7 +75,6 @@ class Board(BaseModel):
 
 class Project(BaseModel):
     title = models.CharField(_('Title'),max_length=100)
-    deadline = models.DateField(null=True, blank=True)
     image = models.ForeignKey(Image,verbose_name=_('Image'),on_delete=models.SET_NULL,null=True , blank=True)
     board = models.ForeignKey(Board,verbose_name=_('Board'),on_delete=models.CASCADE,related_name='projects',null=True, blank=True)
     workspace = models.ForeignKey(Workspace,verbose_name=_('Workspace'),on_delete=models.CASCADE,related_name='projects')
@@ -129,6 +128,15 @@ class Task(BaseModel):
     user = models.ForeignKey(Role,verbose_name=_('User') , on_delete=models.SET_NULL,null=True,blank=True,related_name='task')
     workspace = models.ForeignKey(Workspace,verbose_name=_('Workspace'),on_delete=models.CASCADE,related_name='tasks')
     file = models.FileField(_('File'),upload_to='files/', null=True, blank=True,default=None)
+
+
+    def save(self,*args,**kwargs):
+        if self.status in ["done","Done"] and self.end_time is None:
+            self.end_time = date.today()
+
+        elif self.status not in ["done","Done"]:
+            self.end_time = None
+        super().save(*args,**kwargs)
 
     def __str__(self):
         return f'{self.title}'

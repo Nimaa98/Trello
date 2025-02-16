@@ -102,6 +102,7 @@ class TaskView(CustomView,viewsets.ModelViewSet):
     queryset = Task.objects.all()
     permission_classes = [AllowAny]
 
+
     def get_serializer_class(self):
 
         serializer_class = TaskDetailSerializer

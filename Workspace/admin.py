@@ -32,7 +32,7 @@ class BoardAdmin(admin.ModelAdmin):
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
 
-    list_display = ('title' , 'deadline', 'board', 'admin','create_at')
+    list_display = ('title' , 'board', 'admin','create_at')
     list_filter = ('board',)
     search_fields = ('title',)
 
@@ -64,7 +64,7 @@ class TaskAdmin(admin.ModelAdmin):
     
     def get_user(self,obj):
         if obj.user:
-            return obj.user.user.username
+            return obj.user.user.user.username
         else:
             return "-"
     
