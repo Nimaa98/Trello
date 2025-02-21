@@ -42,7 +42,9 @@ class WorkspaceView(ValidateID,viewsets.ModelViewSet):
         if not user.is_authenticated:
             return Workspace.objects.none()
         
-        return Workspace.objects.filter(Q(owner=user) | Q(workspaceusers__user=user)).distinct()
+        return Workspace.objects.filter(Q(owner=user) | Q(workspaceusers__user=user)).select_related(
+            "owner").prefetch_related("workspaceusers","boards").annotate(
+                total_users=Count("workspaceusers",distinct=True)).annotate(total_boards=Count("boards",distinct=True))
 
 
     def perform_create(self, serializer):
@@ -72,7 +74,7 @@ class WorkspaceUserView(ValidateID,viewsets.ModelViewSet):
         if not user.is_authenticated:
            return WorkspaceUser.objects.none()
         
-        return WorkspaceUser.objects.filter(Q(workspace__owner=user) | Q(workspace__workspaceusers__user=user)).distinct()
+        return WorkspaceUser.objects.filter(Q(workspace__owner=user) | Q(user=user)).select_related("workspace","user")
     #.values("workspace__id","workspace__name","workspace__owner").annotate(count=Count("workspace__id"))
     
     
@@ -95,9 +97,10 @@ class BoardView(ValidateID,viewsets.ModelViewSet):
         
         user= self.request.user
         if not user.is_authenticated:
-           return WorkspaceUser.objects.none()
+           return Board.objects.none()
         
-        return Board.objects.filter(Q(workspace__owner=user) | Q(workspace__workspaceusers__user=user)).distinct()
+        return Board.objects.filter(Q(workspace__owner=user) | Q(workspace__workspaceusers__user=user)).select_related(
+            "workspace").prefetch_related("projects").annotate(total_projects=Count("projects",distinct=True))
 
 
     
@@ -119,13 +122,17 @@ class ProjectView(ValidateID,viewsets.ModelViewSet):
         
         user= self.request.user
         if not user.is_authenticated:
-           return WorkspaceUser.objects.none()
+           return Project.objects.none()
         
-        return Project.objects.filter(Q(workspace__owner=user) | Q(workspace__workspaceusers__user=user)).distinct()
+        return Project.objects.filter(Q(workspace__owner=user) | Q(workspace__workspaceusers__user=user)).select_related(
+            "workspace","board","admin__user").prefetch_related("tasks").annotate(
+                total_tasks=Count("tasks",distinct=True),completed_tasks=Count("tasks",filter=Q(tasks__status="done"),distinct=True),
+                in_progress_tasks=Count("tasks",filter=Q(tasks__status="doing"),distinct=True),
+                remain_tasks=Count("tasks",filter=Q(tasks__status="todo"),distinct=True))
     
 
 class TaskView(ValidateID,viewsets.ModelViewSet):
-    
+
     permission_classes = [TaskPermission]
 
 
@@ -142,9 +149,10 @@ class TaskView(ValidateID,viewsets.ModelViewSet):
         
         user= self.request.user
         if not user.is_authenticated:
-           return WorkspaceUser.objects.none()
+           return Task.objects.none()
         
-        return Task.objects.filter(Q(workspace__owner=user) | Q(workspace__workspaceusers__user=user)).distinct()
+        return Task.objects.filter(Q(workspace__owner=user) | Q(workspace__workspaceusers__user=user)).select_related(
+            "workspace","project","user__user__user").prefetch_related("workspace__workspaceusers").distinct()
     
 
 class RoleView(ValidateID,viewsets.ModelViewSet):
@@ -158,8 +166,9 @@ class RoleView(ValidateID,viewsets.ModelViewSet):
         
         user= self.request.user
         if not user.is_authenticated:
-           return WorkspaceUser.objects.none()
+           return Role.objects.none()
         
-        return Role.objects.filter(Q(user__workspace__owner=user) | Q(user__workspace__workspaceusers__user=user)).distinct()
+        return Role.objects.filter(Q(user__workspace__owner=user) | Q(user__workspace__workspaceusers__user=user)).select_related(
+            "user").prefetch_related("user__workspace").distinct()
         
 

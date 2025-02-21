@@ -2,6 +2,7 @@ from rest_framework import permissions
 from .models import Workspace,WorkspaceUser,Board,Project,Task,Role
 from django.shortcuts import get_object_or_404
 import uuid
+from Account.models import User
 
 
 
@@ -20,13 +21,16 @@ class WorkspacePermission(permissions.BasePermission):
 
     def has_object_permission(self , request ,view,obj):
         
-        is_member = WorkspaceUser.objects.filter(workspace=obj, user=request.user).exists()
+        
+        
+        if request.user == obj.owner:
+            return True
         
         if request.method in permissions.SAFE_METHODS:
 
-            return is_member or request.user == obj.owner
-        return request.user == obj.owner
-    
+            is_member = WorkspaceUser.objects.filter(workspace=obj, user=request.user).exists()
+
+            return is_member 
 
 
 class WorkspaceUserPermission(permissions.BasePermission):
@@ -34,12 +38,16 @@ class WorkspaceUserPermission(permissions.BasePermission):
 
     def has_permission(self, request,view):
         workspace_id = request.data.get("workspace")
+        user_id = request.data.get("user")
         
         
         if view.action == "create":
             try:
                 workspace_uuid = uuid.UUID(str(workspace_id))
                 workspace = Workspace.objects.filter(id = workspace_id).first()
+
+                #user_uuid = uuid.UUID(str(user_id))
+                #user = User.objects.filter(id = user_id).first()
 
             except ValueError:
                 return False
@@ -56,14 +64,16 @@ class WorkspaceUserPermission(permissions.BasePermission):
 
     def has_object_permission(self , request ,view,obj):
         
-        is_member = WorkspaceUser.objects.filter(workspace=obj.workspace, user=request.user).exists()
+        
+        
+        if request.user == obj.workspace.owner:
+            return True
         
         if request.method in permissions.SAFE_METHODS:
-
-            return is_member or request.user == obj.workspace.owner
+            is_member = WorkspaceUser.objects.filter(workspace=obj.workspace, user=request.user).exists()
+            return is_member 
         
-        return request.user == obj.workspace.owner
-
+        
 
 
 class BoardPermission(permissions.BasePermission):
@@ -93,13 +103,17 @@ class BoardPermission(permissions.BasePermission):
 
     def has_object_permission(self , request ,view,obj):
         
-        is_member = WorkspaceUser.objects.filter(workspace=obj.workspace, user=request.user).exists()
         
+        
+        if request.user == obj.workspace.owner:
+            return True
+
         if request.method in permissions.SAFE_METHODS:
 
-            return is_member or request.user == obj.workspace.owner
+            is_member = WorkspaceUser.objects.filter(workspace=obj.workspace, user=request.user).exists()
+            return is_member 
         
-        return request.user == obj.workspace.owner
+        
 
 
 class ProjectPermission(permissions.BasePermission):
@@ -254,7 +268,7 @@ class TaskPermission(permissions.BasePermission):
 
             
             main_condition = request.user.is_authenticated and (
-                workspace and workspace.owner == request.user) or request.user== project_admin or self.check_user_permisson(request,view)
+                workspace and workspace.owner == request.user) or request.user== project_admin or self.check_user_permisson(request,obj)
 
             
             return (
@@ -284,13 +298,13 @@ class TaskPermission(permissions.BasePermission):
 
         return False
     
-    def check_user_permisson(self,request,view):
+    def check_user_permisson(self,request,obj):
 
         file = request.data.get("file")
         status = request.data.get("status")
         delivery_time = request.data.get("delivery_time")
 
-        obj = view.get_object()
+        
 
         access_level = obj.user.access_level
         user = obj.user.user.user
@@ -309,3 +323,5 @@ class TaskPermission(permissions.BasePermission):
                 return True    
         
         return False
+
+

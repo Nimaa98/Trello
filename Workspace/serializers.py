@@ -26,7 +26,6 @@ class WorkspaceUserSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(),write_only=True)
 
 
-
     class Meta:
         model = WorkspaceUser
         fields = ("id","workspace","user","workspace_name","username","create_at")
@@ -58,6 +57,8 @@ class TaskSerializer(serializers.ModelSerializer):
 
 
 class TaskDetailSerializer(serializers.ModelSerializer):
+
+
 
     def validate_title(self,value):
         if not value.strip():
@@ -117,13 +118,16 @@ class TaskDetailSerializer(serializers.ModelSerializer):
 
 
 
-    def get_access_level(self,obj):
-        if obj.user:
-            return obj.user.access_level
-        else:
-            return None
+    #def get_access_level(self,obj):
+     #   if obj.user:
+       #     return obj.user.access_level
+      #  else:
+        #    return None
 
-    access_level = serializers.SerializerMethodField(read_only=True)
+    #access_level = serializers.SerializerMethodField(read_only=True)
+
+    access_level = serializers.CharField(source = "user.access_level",read_only=True,default='-')
+    
 
 
     USER = serializers.CharField(source = 'user.user.user.username',read_only =True,default="-")
@@ -150,8 +154,6 @@ class TaskDetailSerializer(serializers.ModelSerializer):
 
 
 
-
-
 class ProjectSerializer(serializers.ModelSerializer,ImageSerializer):
 
     class Meta:
@@ -170,29 +172,32 @@ class ProjectDetailSerializer(serializers.ModelSerializer,ImageSerializer):
             raise serializers.ValidationError("title must have at least one letter")
         return value
 
+    total_tasks = serializers.IntegerField(read_only=True)
+    completed_tasks = serializers.IntegerField(read_only=True)
+    in_progress_tasks = serializers.IntegerField(read_only=True)
+    remain_tasks = serializers.IntegerField(read_only=True)
 
-
-    total_tasks = serializers.SerializerMethodField(read_only=True)
-    completed_tasks = serializers.SerializerMethodField(read_only=True)
-    in_progress_tasks = serializers.SerializerMethodField(read_only=True)
-    remain_tasks = serializers.SerializerMethodField(read_only=True)
+    #total_tasks = serializers.SerializerMethodField(read_only=True)
+    #completed_tasks = serializers.SerializerMethodField(read_only=True)
+    #in_progress_tasks = serializers.SerializerMethodField(read_only=True)
+    #remain_tasks = serializers.SerializerMethodField(read_only=True)
     
 
 
-    def get_total_tasks(self,obj):
-        return obj.tasks.count()
+    #def get_total_tasks(self,obj):
+     #   return obj.tasks.count()
     
 
-    def get_completed_tasks(self,obj):
-        return obj.tasks.filter(status='done').count() 
+    #def get_completed_tasks(self,obj):
+     #   return obj.tasks.filter(status='done').count() 
     
 
-    def get_in_progress_tasks (self,obj):
-        return obj.tasks.filter(status = 'doing').count() 
+    #def get_in_progress_tasks (self,obj):
+     #   return obj.tasks.filter(status = 'doing').count() 
     
 
-    def get_remain_tasks(self,obj):
-        return obj.tasks.filter(status= 'todo').count() 
+    #def get_remain_tasks(self,obj):
+     #   return obj.tasks.filter(status= 'todo').count() 
     
     
     
@@ -235,10 +240,10 @@ class BoardDetailSerializer(serializers.ModelSerializer,ImageSerializer):
 
 
 
-    total_projects = serializers.SerializerMethodField(read_only=True)
+    total_projects = serializers.IntegerField(read_only=True)
 
-    def get_total_projects(self,obj):
-        return obj.projects.count()
+    #def get_total_projects(self,obj):
+        #return obj.total_projects
 
 
     workspace_name = serializers.CharField(source = 'workspace.name', read_only =True)
@@ -280,23 +285,26 @@ class WorkspaceDetailSerializer(serializers.ModelSerializer,ImageSerializer):
 
 
     def validate_image(self,value):
-        if not Image.objects.filter(id=value).exists() and value!=None:
+        if value and not Image.objects.filter(id=value).exists():
             raise serializers.ValidationError("invalid Image ID")
         return value
     
 
-    total_users = serializers.SerializerMethodField(read_only=True)
-    total_boards = serializers.SerializerMethodField(read_only=True)
+    #total_users = serializers.SerializerMethodField(read_only=True)
+    #total_boards = serializers.SerializerMethodField(read_only=True)
+
+    total_users = serializers.IntegerField(read_only=True)
+    total_boards = serializers.IntegerField(read_only=True)
 
 
     owner = serializers.CharField(source = 'owner.username' ,read_only=True)
 
-    def get_total_users(self,obj):
-        return obj.workspaceusers.count() 
+    #def get_total_users(self,obj):
+     #   return obj.total_users 
 
 
-    def get_total_boards(self,obj):
-        return obj.boards.count()
+    #def get_total_boards(self,obj):
+     #   return obj.total_boards
     
 
 
