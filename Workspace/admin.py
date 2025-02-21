@@ -51,10 +51,14 @@ class RoleAdmin(admin.ModelAdmin):
 @admin.register(Task)
 class TaskAdmin(admin.ModelAdmin):
 
-    list_display = ('title' , 'delivery_time', 'status','label','get_project','get_user', 'create_at')
+    list_display = ('title' , 'delivery_time', 'status','label','get_workspace','get_project','get_user', 'create_at')
     list_filter = ('status','project','user',)
     search_fields = ('title',)
 
+    def get_workspace(self,obj):
+        if obj.workspace:
+            return obj.workspace
+        return "-"
 
     def get_project(self,obj):
         if obj.project:
@@ -70,6 +74,7 @@ class TaskAdmin(admin.ModelAdmin):
     
     get_project.short_description = "Project"
     get_user.short_description = "User"
+    get_workspace.short_description = "Workspace"
 
     
 
@@ -86,7 +91,7 @@ class TaskAdmin(admin.ModelAdmin):
             'fields': ('start_time', 'end_time','delivery_time',)
         }),
         ('Relations', {
-            'fields': ('project', 'user','file',)
+            'fields': ('workspace','project', 'user','file',)
         }),
 
     )

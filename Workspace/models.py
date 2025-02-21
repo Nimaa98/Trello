@@ -102,7 +102,7 @@ class Role(BaseModel):
     user = models.ForeignKey(WorkspaceUser,verbose_name=_('User'),on_delete=models.CASCADE,related_name='role')
 
     def __str__(self):
-        return f'{self.user.username}-{self.access_level}'
+        return f'{self.user.user.username}-{self.access_level}'
     
     class Meta:
         verbose_name = _('Role')

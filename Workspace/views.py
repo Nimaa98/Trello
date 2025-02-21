@@ -1,6 +1,7 @@
 from rest_framework import status, generics, viewsets , serializers
 from rest_framework.decorators import action
 from rest_framework.views import APIView
+from rest_framework.viewsets import ViewSetMixin
 from rest_framework.request import Request
 from rest_framework.response import Response
 from .models import User
@@ -12,33 +13,36 @@ from .serializers import (WorkspaceSerializer,WorkspaceDetailSerializer,
 
 from rest_framework.permissions import AllowAny
 from django.db import connection
+from django.db.models import Q ,Count
 from .models import Workspace,Board,Project,Task,Role,WorkspaceUser
 from django.shortcuts import get_object_or_404
-from .permission import WorkspacePermission
-from django.core.exceptions import ValidationError
+from .permission import WorkspacePermission ,WorkspaceUserPermission, BoardPermission ,ProjectPermission, RolePermission,TaskPermission
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 
 # Create your views here.
 
 
 
-class CustomView(viewsets.GenericViewSet):
+class ValidateID(ViewSetMixin):
 
     lookup_field = 'id'
-
+    
+class WorkspaceView(ValidateID,viewsets.ModelViewSet):
+    
+    
+    permission_classes = [WorkspacePermission]
+    
+    
     def get_object(self):
-        return  get_object_or_404(self.get_queryset(),id=self.kwargs['id'])
+        return super().get_object()
     
-
-
-
-
-class WorkspaceView(CustomView,viewsets.ModelViewSet):
-    
-    #lookup_field = 'id'
-    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return Workspace.objects.filter(owner=self.request.user)
+        user= self.request.user
+        if not user.is_authenticated:
+            return Workspace.objects.none()
+        
+        return Workspace.objects.filter(Q(owner=user) | Q(workspaceusers__user=user)).distinct()
 
 
     def perform_create(self, serializer):
@@ -55,21 +59,29 @@ class WorkspaceView(CustomView,viewsets.ModelViewSet):
 
     
 
-class WorkspaceUserView(CustomView,viewsets.ModelViewSet):
+class WorkspaceUserView(ValidateID,viewsets.ModelViewSet):
     
-    #lookup_field = 'id'
-    permission_classes = [AllowAny]
+    
+    permission_classes = [WorkspaceUserPermission]
     serializer_class = WorkspaceUserSerializer
-    queryset = WorkspaceUser.objects.all()
-
-
-
-class BoardView(CustomView,viewsets.ModelViewSet):
     
 
-    #lookup_field = 'id'
-    queryset = Board.objects.all()
-    permission_classes = [AllowAny]
+    def get_queryset(self):
+        
+        user= self.request.user
+        if not user.is_authenticated:
+           return WorkspaceUser.objects.none()
+        
+        return WorkspaceUser.objects.filter(Q(workspace__owner=user) | Q(workspace__workspaceusers__user=user)).distinct()
+    #.values("workspace__id","workspace__name","workspace__owner").annotate(count=Count("workspace__id"))
+    
+    
+
+
+class BoardView(ValidateID,viewsets.ModelViewSet):
+    
+    
+    permission_classes = [BoardPermission]
 
     def get_serializer_class(self):
 
@@ -79,12 +91,20 @@ class BoardView(CustomView,viewsets.ModelViewSet):
 
         return serializer_class
     
-class ProjectView(CustomView,viewsets.ModelViewSet):
-    
+    def get_queryset(self):
+        
+        user= self.request.user
+        if not user.is_authenticated:
+           return WorkspaceUser.objects.none()
+        
+        return Board.objects.filter(Q(workspace__owner=user) | Q(workspace__workspaceusers__user=user)).distinct()
 
-    #lookup_field = 'id'
-    queryset = Project.objects.all()
-    permission_classes = [AllowAny]
+
+    
+class ProjectView(ValidateID,viewsets.ModelViewSet):
+    
+    
+    permission_classes = [ProjectPermission]
 
     def get_serializer_class(self):
 
@@ -93,14 +113,20 @@ class ProjectView(CustomView,viewsets.ModelViewSet):
             serializer_class = ProjectSerializer
 
         return serializer_class
+
+
+    def get_queryset(self):
+        
+        user= self.request.user
+        if not user.is_authenticated:
+           return WorkspaceUser.objects.none()
+        
+        return Project.objects.filter(Q(workspace__owner=user) | Q(workspace__workspaceusers__user=user)).distinct()
     
 
-class TaskView(CustomView,viewsets.ModelViewSet):
+class TaskView(ValidateID,viewsets.ModelViewSet):
     
-
-    #lookup_field = 'id'
-    queryset = Task.objects.all()
-    permission_classes = [AllowAny]
+    permission_classes = [TaskPermission]
 
 
     def get_serializer_class(self):
@@ -112,12 +138,28 @@ class TaskView(CustomView,viewsets.ModelViewSet):
         return serializer_class
     
 
-class RoleView(CustomView,viewsets.ModelViewSet):
+    def get_queryset(self):
+        
+        user= self.request.user
+        if not user.is_authenticated:
+           return WorkspaceUser.objects.none()
+        
+        return Task.objects.filter(Q(workspace__owner=user) | Q(workspace__workspaceusers__user=user)).distinct()
     
 
-    #lookup_field = 'id'
-    queryset = Role.objects.all()
-    permission_classes = [AllowAny]
+class RoleView(ValidateID,viewsets.ModelViewSet):
+    
+
+    
+    permission_classes = [RolePermission]
     serializer_class = RoleSerializer
+
+    def get_queryset(self):
+        
+        user= self.request.user
+        if not user.is_authenticated:
+           return WorkspaceUser.objects.none()
+        
+        return Role.objects.filter(Q(user__workspace__owner=user) | Q(user__workspace__workspaceusers__user=user)).distinct()
         
 

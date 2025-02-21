@@ -15,31 +15,22 @@ class ImageSerializer:
         return obj.image.url if obj.image else None
 
 
-
-
-
 class WorkspaceUserSerializer(serializers.ModelSerializer):
 
-    def validate_workspace(self,value):
-        if not Workspace.objects.filter(id=value).exists():
-            raise serializers.ValidationError("invalid workspace id")
-        return value
 
-    def validate_user(self,value):
-        if not User.objects.filter(id=value).exists():
-            raise serializers.ValidationError("invalid user id")
-        return value
+    username = serializers.CharField(source='user.username', read_only=True)
 
     workspace_name = serializers.CharField(source='workspace.name', read_only=True)
-    username = serializers.CharField(source='user.username', read_only=True)
 
     workspace = serializers.PrimaryKeyRelatedField(queryset=Workspace.objects.all(),write_only=True)
     user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all(),write_only=True)
 
 
+
     class Meta:
         model = WorkspaceUser
         fields = ("id","workspace","user","workspace_name","username","create_at")
+
 
 
 class RoleSerializer(serializers.ModelSerializer):
@@ -256,8 +247,6 @@ class BoardDetailSerializer(serializers.ModelSerializer,ImageSerializer):
     class Meta:
         model = Board
         fields = ("id","title","visibility","workspace_name","workspace","total_projects","image","projects","create_at")
-
-
 
 
 
