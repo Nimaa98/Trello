@@ -309,13 +309,14 @@ class TaskPermission(permissions.BasePermission):
         access_level = obj.user.access_level
         user = obj.user.user.user
         
-        
+        print(user)
+        print(access_level)
         if obj.user and request.user == user:
          
-            if file:
+            if file and not status and not delivery_time:
                 return True
             
-            if status and access_level in ["level 2","2", "level 3","3"]:
+            if status and not delivery_time and access_level in ["level 2","2", "level 3","3"]:
                 return True
             
             if delivery_time and access_level in ["level 3","3"]:
